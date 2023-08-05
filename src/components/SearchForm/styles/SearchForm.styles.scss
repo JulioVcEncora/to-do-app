@@ -1,0 +1,12 @@
+.form-container {
+    padding: 2%;
+    border: 1px solid black;
+    border-radius: 10px;
+    position: relative;
+
+    .item:last-child {
+        position: absolute;
+        bottom: 0;
+        right: 20px;
+    }
+}
