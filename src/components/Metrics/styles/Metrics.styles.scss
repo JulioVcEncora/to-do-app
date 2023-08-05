@@ -1,0 +1,14 @@
+.metrics-container {
+    padding: 2%;
+    border: 1px solid black;
+    border-radius: 10px;
+
+    .row {
+        min-height: 44px;
+
+        .normal-task-time, .finish-tasks {
+            display: flex;
+            justify-content: center;
+        }
+    }
+}

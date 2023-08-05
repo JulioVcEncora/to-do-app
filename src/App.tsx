@@ -1,6 +1,4 @@
-import { SearchForm } from './components';
-import { CreateTodoButton } from './components/CreateTodo';
-import { TodoTable } from './components/TodoList';
+import { SearchForm, CreateTodoButton, TodoTable, Metrics } from './components';
 
 function App() {
     return (
@@ -8,6 +6,7 @@ function App() {
             <SearchForm />
             <CreateTodoButton />
             <TodoTable />
+            <Metrics />
         </>
     );
 }

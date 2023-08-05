@@ -24,12 +24,7 @@ export const SearchForm: React.FC = () => {
             colon={false}
             onFinish={handleSubmit}
         >
-            <Form.Item
-                className='item'
-                label='Name'
-                name='name'
-                rules={[{ required: true }]}
-            >
+            <Form.Item className='item' label='Name' name='name'>
                 <Input />
             </Form.Item>
 
@@ -40,6 +35,7 @@ export const SearchForm: React.FC = () => {
                 rules={[{ required: true }]}
             >
                 <Select placeholder='All, High, Medium, Low' allowClear>
+                    <Option value='all'>All</Option>
                     <Option value='high'>High</Option>
                     <Option value='medium'>Medium</Option>
                     <Option value='low'>Low</Option>
@@ -53,6 +49,7 @@ export const SearchForm: React.FC = () => {
                 rules={[{ required: true }]}
             >
                 <Select placeholder='All, Done, Undone' allowClear>
+                    <Option value='all'>All</Option>
                     <Option value='Done'>Done</Option>
                     <Option value='Undone'>Undone</Option>
                 </Select>

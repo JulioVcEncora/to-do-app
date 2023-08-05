@@ -1,21 +1,27 @@
 import React from 'react';
 import { Button, Form, Input, Select, DatePicker, Modal } from 'antd';
+import { DataType } from './';
 
 const { Option } = Select;
 
-type CreateTodoModalProps = {
+type EditModalProps = {
     handleSubmit: (values: any) => void;
     open: boolean;
     closeModal: () => void;
     isLoading: boolean;
+    initialValues: Omit<DataType, 'key' | 'actions'> & {
+        state: 'done' | 'undone';
+    };
 };
 
-export const CreateTodoModal: React.FC<CreateTodoModalProps> = ({
+export const EditModal: React.FC<EditModalProps> = ({
     handleSubmit,
     open,
     closeModal,
     isLoading,
+    initialValues,
 }) => {
+    const { name, priority, dueDate, state } = initialValues;
     return (
         <Modal
             title='Create a new To Do'
@@ -36,6 +42,7 @@ export const CreateTodoModal: React.FC<CreateTodoModalProps> = ({
                     className='item'
                     label='Name'
                     name='name'
+                    initialValue={name}
                     rules={[{ required: true }]}
                 >
                     <Input />
@@ -45,6 +52,7 @@ export const CreateTodoModal: React.FC<CreateTodoModalProps> = ({
                     className='item'
                     label='Priority'
                     name='priority'
+                    initialValue={priority}
                     rules={[{ required: true }]}
                 >
                     <Select placeholder='All, High, Medium, Low' allowClear>
@@ -58,6 +66,7 @@ export const CreateTodoModal: React.FC<CreateTodoModalProps> = ({
                     className='item'
                     label='State'
                     name='state'
+                    initialValue={state}
                     rules={[{ required: true }]}
                 >
                     <Select placeholder='All, Done, Undone' allowClear>
@@ -72,7 +81,7 @@ export const CreateTodoModal: React.FC<CreateTodoModalProps> = ({
                     name='dueDate'
                     rules={[{ required: false }]}
                 >
-                    <DatePicker />
+                    <DatePicker placeholder={dueDate} />
                 </Form.Item>
 
                 <Form.Item className='item' label=' '>
@@ -81,7 +90,7 @@ export const CreateTodoModal: React.FC<CreateTodoModalProps> = ({
                         type='primary'
                         htmlType='submit'
                     >
-                        Create
+                        Update
                     </Button>
                 </Form.Item>
             </Form>

@@ -2,14 +2,16 @@ import React, { useState } from 'react';
 import { Table } from 'antd';
 import { ColumnsType } from 'antd/es/table';
 import './styles/TodoTable.styles.scss';
+import { EditModal } from './EditModal';
+import { DeleteModal } from './DeleteModal';
 
-interface DataType {
+export type DataType = {
     key?: string;
     name: string;
     priority: 'high' | 'medium' | 'low';
     dueDate: string;
-    actions: 'edit' | 'delete';
-}
+    actions: React.ReactNode;
+};
 
 const columns: ColumnsType<DataType> = [
     {
@@ -47,50 +49,54 @@ const columns: ColumnsType<DataType> = [
     },
 ];
 
-const data: DataType[] = [
-    {
-        key: '1',
-        name: 'Julio Brown',
-        priority: 'high',
-        dueDate: '2023-08-02',
-        actions: 'edit',
-    },
-    {
-        key: '2',
-        name: 'Juan Brown',
-        priority: 'high',
-        dueDate: '2023-08-03',
-        actions: 'edit',
-    },
-    {
-        key: '3',
-        name: 'Mario Brown',
-        priority: 'medium',
-        dueDate: '2023-08-04',
-        actions: 'edit',
-    },
-    {
-        key: '4',
-        name: 'Carlos Brown',
-        priority: 'low',
-        dueDate: '2023-08-05',
-        actions: 'edit',
-    },
-    {
-        key: '5',
-        name: 'Alberto Brown',
-        priority: 'high',
-        dueDate: '2023-08-06',
-        actions: 'edit',
-    },
-    {
-        key: '6',
-        name: 'Pablo Brown',
-        priority: 'low',
-        dueDate: '2023-08-02',
-        actions: 'edit',
-    },
-];
+const CtaOptions: React.FC<
+    Omit<DataType, 'actions'> & { state: 'done' | 'undone' }
+> = ({ name, dueDate, priority, state }) => {
+    const [editModalShow, setEditModalShow] = useState(false);
+    const [deleteModalShow, setDeleteModalShow] = useState(false);
+    return (
+        <div>
+            <span
+                onClick={() => {
+                    setEditModalShow(true);
+                }}
+            >
+                edit
+            </span>{' '}
+            /{' '}
+            <span
+                onClick={() => {
+                    setDeleteModalShow(true);
+                }}
+            >
+                delete
+            </span>
+            <EditModal
+                handleSubmit={() => null}
+                open={editModalShow}
+                closeModal={() => {
+                    setEditModalShow(false);
+                }}
+                isLoading={false}
+                initialValues={{
+                    name,
+                    priority,
+                    dueDate,
+                    state,
+                }}
+            />
+            <DeleteModal
+                open={deleteModalShow}
+                closeModal={() => {
+                    setDeleteModalShow(false);
+                }}
+                handleConfirm={() => {
+                    console.log('confirmed delete');
+                }}
+            />
+        </div>
+    );
+};
 
 export const TodoTable: React.FC = () => {
     const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
@@ -99,6 +105,99 @@ export const TodoTable: React.FC = () => {
         console.log('selectedRowKeys changed: ', newSelectedRowKeys);
         setSelectedRowKeys(newSelectedRowKeys);
     };
+
+    const data: DataType[] = [
+        {
+            key: '1',
+            name: 'Julio Brown',
+            priority: 'high',
+            dueDate: '2023-08-02',
+            actions: (
+                <CtaOptions
+                    name='Julio Brown'
+                    priority='high'
+                    dueDate='2023-08-02'
+                    state='undone'
+                    key='Julio Brown'
+                />
+            ),
+        },
+        {
+            key: '2',
+            name: 'Juan Brown',
+            priority: 'high',
+            dueDate: '2023-08-03',
+            actions: (
+                <CtaOptions
+                    name='Juan Brown'
+                    priority='low'
+                    dueDate='2023-08-03'
+                    state='undone'
+                    key='Juan Brown'
+                />
+            ),
+        },
+        {
+            key: '3',
+            name: 'Mario Brown',
+            priority: 'medium',
+            dueDate: '2023-08-04',
+            actions: (
+                <CtaOptions
+                    name='Mario Brown'
+                    priority='medium'
+                    dueDate='2023-08-04'
+                    state='done'
+                    key='Mario Brown'
+                />
+            ),
+        },
+        {
+            key: '4',
+            name: 'Carlos Brown',
+            priority: 'low',
+            dueDate: '2023-08-05',
+            actions: (
+                <CtaOptions
+                    name='Carlos Brown'
+                    priority='low'
+                    dueDate='2023-08-05'
+                    state='done'
+                    key='Carlos Brown'
+                />
+            ),
+        },
+        {
+            key: '5',
+            name: 'Alberto Brown',
+            priority: 'high',
+            dueDate: '2023-08-06',
+            actions: (
+                <CtaOptions
+                    name='Alberto Brown'
+                    priority='high'
+                    dueDate='2023-08-06'
+                    state='done'
+                    key='Alberto Brown'
+                />
+            ),
+        },
+        {
+            key: '6',
+            name: 'Pablo Brown',
+            priority: 'low',
+            dueDate: '2023-08-02',
+            actions: (
+                <CtaOptions
+                    name='Pablo Brown'
+                    priority='low'
+                    dueDate='2023-08-02'
+                    state='done'
+                    key='Pablo Brown'
+                />
+            ),
+        },
+    ];
 
     const rowSelection = {
         selectedRowKeys,
