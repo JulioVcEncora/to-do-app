@@ -1,15 +1,18 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Table } from 'antd';
 import { ColumnsType } from 'antd/es/table';
 import './styles/TodoTable.styles.scss';
 import { EditModal } from './EditModal';
 import { DeleteModal } from './DeleteModal';
+import { useAppDispatch, useAppSelector } from '../../../app';
+import { fetchTodos, setAsDone, setAsUndone } from '../../features/todos';
 
 export type DataType = {
     key?: string;
     name: string;
     priority: 'high' | 'medium' | 'low';
-    dueDate: string;
+    dueDate: number | string | Date;
+    doneDate: number | string | Date;
     actions: React.ReactNode;
 };
 
@@ -40,7 +43,6 @@ const columns: ColumnsType<DataType> = [
     {
         title: 'Due Date',
         dataIndex: 'dueDate',
-        sorter: (a, b) => a.dueDate.length - b.dueDate.length,
         sortDirections: ['descend', 'ascend'],
     },
     {
@@ -51,7 +53,7 @@ const columns: ColumnsType<DataType> = [
 
 const CtaOptions: React.FC<
     Omit<DataType, 'actions'> & { state: 'done' | 'undone' }
-> = ({ name, dueDate, priority, state }) => {
+> = ({ name, dueDate, priority, state, doneDate }) => {
     const [editModalShow, setEditModalShow] = useState(false);
     const [deleteModalShow, setDeleteModalShow] = useState(false);
     return (
@@ -83,6 +85,7 @@ const CtaOptions: React.FC<
                     priority,
                     dueDate,
                     state,
+                    doneDate,
                 }}
             />
             <DeleteModal
@@ -92,6 +95,7 @@ const CtaOptions: React.FC<
                 }}
                 handleConfirm={() => {
                     console.log('confirmed delete');
+                    setDeleteModalShow(false);
                 }}
             />
         </div>
@@ -100,116 +104,91 @@ const CtaOptions: React.FC<
 
 export const TodoTable: React.FC = () => {
     const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
+    const [data, setData] = useState<DataType[] | []>([]);
+    const dispatch = useAppDispatch();
+
+    const { loading, todos, error } = useAppSelector((state) => state.todos);
+
+    useEffect(() => {
+        dispatch(fetchTodos());
+    }, []);
+
+    useEffect(() => {
+        const formattedTodos: DataType[] = todos.map((todo) => {
+            return {
+                ...todo,
+                name: todo.name ? todo.name : '-',
+                dueDate: todo.dueDate ? new Date(todo.dueDate) : '-',
+                doneDate: todo.doneDate ? new Date(todo.doneDate) : '-',
+                key: todo.id,
+                actions: (
+                    <CtaOptions
+                        name={todo.name ? todo.name : '-'}
+                        priority={todo.priority}
+                        dueDate={todo.dueDate ? new Date(todo.dueDate) : '-'}
+                        doneDate={todo.doneDate ? new Date(todo.doneDate) : '-'}
+                        state={todo.state}
+                        key={todo.id}
+                    />
+                ),
+            };
+        });
+        setData(formattedTodos);
+        setSelectedRowKeys(
+            todos
+                .filter((todo) => todo.state === 'done')
+                .map((todo) => todo.id),
+        );
+    }, [todos]);
 
     const onSelectChange = (newSelectedRowKeys: React.Key[]) => {
-        console.log('selectedRowKeys changed: ', newSelectedRowKeys);
         setSelectedRowKeys(newSelectedRowKeys);
-    };
+        console.log(newSelectedRowKeys);
 
-    const data: DataType[] = [
-        {
-            key: '1',
-            name: 'Julio Brown',
-            priority: 'high',
-            dueDate: '2023-08-02',
-            actions: (
-                <CtaOptions
-                    name='Julio Brown'
-                    priority='high'
-                    dueDate='2023-08-02'
-                    state='undone'
-                    key='Julio Brown'
-                />
-            ),
-        },
-        {
-            key: '2',
-            name: 'Juan Brown',
-            priority: 'high',
-            dueDate: '2023-08-03',
-            actions: (
-                <CtaOptions
-                    name='Juan Brown'
-                    priority='low'
-                    dueDate='2023-08-03'
-                    state='undone'
-                    key='Juan Brown'
-                />
-            ),
-        },
-        {
-            key: '3',
-            name: 'Mario Brown',
-            priority: 'medium',
-            dueDate: '2023-08-04',
-            actions: (
-                <CtaOptions
-                    name='Mario Brown'
-                    priority='medium'
-                    dueDate='2023-08-04'
-                    state='done'
-                    key='Mario Brown'
-                />
-            ),
-        },
-        {
-            key: '4',
-            name: 'Carlos Brown',
-            priority: 'low',
-            dueDate: '2023-08-05',
-            actions: (
-                <CtaOptions
-                    name='Carlos Brown'
-                    priority='low'
-                    dueDate='2023-08-05'
-                    state='done'
-                    key='Carlos Brown'
-                />
-            ),
-        },
-        {
-            key: '5',
-            name: 'Alberto Brown',
-            priority: 'high',
-            dueDate: '2023-08-06',
-            actions: (
-                <CtaOptions
-                    name='Alberto Brown'
-                    priority='high'
-                    dueDate='2023-08-06'
-                    state='done'
-                    key='Alberto Brown'
-                />
-            ),
-        },
-        {
-            key: '6',
-            name: 'Pablo Brown',
-            priority: 'low',
-            dueDate: '2023-08-02',
-            actions: (
-                <CtaOptions
-                    name='Pablo Brown'
-                    priority='low'
-                    dueDate='2023-08-02'
-                    state='done'
-                    key='Pablo Brown'
-                />
-            ),
-        },
-    ];
+        const done = newSelectedRowKeys.filter(
+            (el) => !selectedRowKeys.includes(el),
+        );
+        const undone = selectedRowKeys.filter(
+            (el) => !newSelectedRowKeys.includes(el),
+        );
+        if (done.length) {
+            done.forEach((el) => {
+                dispatch(setAsDone(`${el}`));
+            });
+        }
+        if (undone.length) {
+            undone.forEach((el) => {
+                dispatch(setAsUndone(`${el}`));
+            });
+        }
+    };
 
     const rowSelection = {
         selectedRowKeys,
         onChange: onSelectChange,
     };
+
+    if (!todos) {
+        return (
+            <div>
+                <Table
+                    rowSelection={rowSelection}
+                    columns={columns}
+                    dataSource={data}
+                />
+            </div>
+        );
+    }
+
     return (
         <div>
             <Table
                 rowSelection={rowSelection}
                 columns={columns}
                 dataSource={data}
+                loading={loading}
             />
+            {error && error}
         </div>
     );
 };

@@ -81,7 +81,7 @@ export const EditModal: React.FC<EditModalProps> = ({
                     name='dueDate'
                     rules={[{ required: false }]}
                 >
-                    <DatePicker placeholder={dueDate} />
+                    <DatePicker placeholder={`${dueDate}`} />
                 </Form.Item>
 
                 <Form.Item className='item' label=' '>
