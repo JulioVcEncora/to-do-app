@@ -1,10 +1,11 @@
 import React from 'react';
 import { Button, Form, Input, Select, DatePicker, Modal } from 'antd';
+import { TodoType } from './';
 
 const { Option } = Select;
 
 type CreateTodoModalProps = {
-    handleSubmit: (values: any) => void;
+    handleSubmit: (values: TodoType) => void;
     open: boolean;
     closeModal: () => void;
     isLoading: boolean;
@@ -16,6 +17,11 @@ export const CreateTodoModal: React.FC<CreateTodoModalProps> = ({
     closeModal,
     isLoading,
 }) => {
+    const [form] = Form.useForm<TodoType>();
+    const onSubmit = (val: TodoType) => {
+        handleSubmit(val);
+        form.resetFields();
+    };
     return (
         <Modal
             title='Create a new To Do'
@@ -24,19 +30,20 @@ export const CreateTodoModal: React.FC<CreateTodoModalProps> = ({
             footer={<></>}
         >
             <Form
-                name='wrap'
+                form={form}
+                name='CreateTodo'
                 labelCol={{ flex: '110px' }}
                 labelAlign='left'
                 labelWrap
                 wrapperCol={{ flex: 1 }}
                 colon={false}
-                onFinish={handleSubmit}
+                onFinish={onSubmit}
             >
                 <Form.Item
                     className='item'
                     label='Name'
                     name='name'
-                    rules={[{ required: true }]}
+                    rules={[{ required: false }]}
                 >
                     <Input />
                 </Form.Item>
@@ -61,8 +68,8 @@ export const CreateTodoModal: React.FC<CreateTodoModalProps> = ({
                     rules={[{ required: true }]}
                 >
                     <Select placeholder='All, Done, Undone' allowClear>
-                        <Option value='Done'>Done</Option>
-                        <Option value='Undone'>Undone</Option>
+                        <Option value='done'>Done</Option>
+                        <Option value='undone'>Undone</Option>
                     </Select>
                 </Form.Item>
 

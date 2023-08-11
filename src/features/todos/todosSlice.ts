@@ -22,7 +22,6 @@ const initialState: TodosState = {
     error: undefined,
 };
 
-// Generates pending, fulfilled and rejected action types
 export const fetchTodos = createAsyncThunk('todos/fetchTodos', async () => {
     const res = await api.get('/todos');
     return res.data;
@@ -37,6 +36,11 @@ export const setAsUndone = createAsyncThunk('todos/setAsUndone', async (id: stri
     const res = await api.put(`/todos/${id}/undone`);
     return res.data;
 });
+
+export const postNewTodo = createAsyncThunk('todos/post', async (body: Omit<Todos, 'id'>) => {
+    const res = await api.post(`/todos`, body);
+    return res.data;
+})
 
 const todosSlice = createSlice({
     name: 'todo',
@@ -89,6 +93,18 @@ const todosSlice = createSlice({
         builder.addCase(setAsUndone.rejected, (state, action) => {
             state.loading = false;
             state.todos = [...state.todos];
+            state.error = action.error.message;
+        });
+        builder.addCase(postNewTodo.pending, (state) => {
+            state.loading = true;
+        });
+        builder.addCase(postNewTodo.fulfilled, (state, action) => {
+            state.loading = false;
+            state.todos.push(action.payload);
+            state.error = '';
+        });
+        builder.addCase(postNewTodo.rejected, (state, action) => {
+            state.loading = false;
             state.error = action.error.message;
         });
     },

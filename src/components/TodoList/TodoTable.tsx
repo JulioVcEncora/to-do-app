@@ -188,7 +188,7 @@ export const TodoTable: React.FC = () => {
                 dataSource={data}
                 loading={loading}
             />
-            {error && error}
+            {error}
         </div>
     );
 };
