@@ -33,7 +33,6 @@ export const CreateTodoButton: React.FC = () => {
             const newDate = new Date(values.dueDate.format('YYYY-MM-DD'));
             // @ts-expect-error this is valid
             dueDate = newDate.getTime();
-            console.log(dueDate);
         }
         values = {
             ...values,
