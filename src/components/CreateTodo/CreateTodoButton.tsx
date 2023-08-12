@@ -37,6 +37,7 @@ export const CreateTodoButton: React.FC = () => {
         }
         values = {
             ...values,
+            state: 'undone',
             dueDate,
         };
         dispatch(postNewTodo(values));

@@ -63,18 +63,6 @@ export const CreateTodoModal: React.FC<CreateTodoModalProps> = ({
 
                 <Form.Item
                     className='item'
-                    label='State'
-                    name='state'
-                    rules={[{ required: true }]}
-                >
-                    <Select placeholder='All, Done, Undone' allowClear>
-                        <Option value='done'>Done</Option>
-                        <Option value='undone'>Undone</Option>
-                    </Select>
-                </Form.Item>
-
-                <Form.Item
-                    className='item'
                     label='Due date'
                     name='dueDate'
                     rules={[{ required: false }]}
