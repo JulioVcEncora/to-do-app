@@ -52,6 +52,11 @@ export const updateTodo = createAsyncThunk('todos/updateTodo', async (body: Todo
     return res.data;
 });
 
+export const fetchMetrics = createAsyncThunk('todos/metrics', async () => {
+    const res = await api.get('/todos/metrics');
+    return res.data;
+})
+
 const todosSlice = createSlice({
     name: 'todo',
     initialState,

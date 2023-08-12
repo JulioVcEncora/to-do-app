@@ -1,10 +1,11 @@
-import { configureStore, ThunkAction, Action } from "@reduxjs/toolkit";
+import { configureStore, ThunkAction, Action, combineReducers } from "@reduxjs/toolkit";
 import {todosReducer} from '../src/features/todos';
+import { metricsReducer } from "../src/features/metrics";
+
+const reducers = combineReducers({todos: todosReducer, metrics: metricsReducer});
 
 export const store = configureStore({
-    reducer: {
-        todos: todosReducer,
-    }
+    reducer: reducers,
 });
 
 export type AppDispatch = typeof store.dispatch;

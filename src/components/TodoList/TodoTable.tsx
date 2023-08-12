@@ -6,6 +6,7 @@ import { EditModal } from './EditModal';
 import { DeleteModal } from './DeleteModal';
 import { useAppDispatch, useAppSelector } from '../../../app';
 import {
+    fetchMetrics,
     fetchTodos,
     setAsDone,
     setAsUndone,
@@ -209,6 +210,7 @@ export const TodoTable: React.FC = () => {
                 dispatch(setAsUndone(`${el}`));
             });
         }
+        dispatch(fetchMetrics());
     };
 
     const rowSelection = {
