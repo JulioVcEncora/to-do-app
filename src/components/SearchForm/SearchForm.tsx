@@ -1,15 +1,29 @@
 import React from 'react';
 import { Button, Form, Input, Select, DatePicker } from 'antd';
+import { useAppDispatch } from '../../../app';
+import { filterTodos } from '../../features/todos';
 import './styles/SearchForm.styles.scss';
+import { TodoType } from '..';
 
 const { Option } = Select;
 
 export const SearchForm: React.FC = () => {
-    const handleSubmit = (values: any) => {
+    const dispatch = useAppDispatch();
+    const handleSubmit = (values: TodoType) => {
+        let dueDate: TodoType['dueDate'];
+        if (values.dueDate) {
+            // @ts-expect-error this is valid
+            const newDate = new Date(values.dueDate.format('YYYY-MM-DD'));
+            // @ts-expect-error this is valid
+            dueDate = newDate.getTime();
+            console.log(dueDate);
+        }
         values = {
             ...values,
-            dueDate: values.dueDate.format('YYYY-MM-DD'),
+            name: values.name ? values.name.toLowerCase() : undefined,
+            dueDate,
         };
+        dispatch(filterTodos(values));
         console.log(values);
     };
 
@@ -32,7 +46,7 @@ export const SearchForm: React.FC = () => {
                 className='item'
                 label='Priority'
                 name='priority'
-                rules={[{ required: true }]}
+                rules={[{ required: false }]}
             >
                 <Select placeholder='All, High, Medium, Low' allowClear>
                     <Option value='all'>All</Option>
@@ -46,12 +60,12 @@ export const SearchForm: React.FC = () => {
                 className='item'
                 label='State'
                 name='state'
-                rules={[{ required: true }]}
+                rules={[{ required: false }]}
             >
                 <Select placeholder='All, Done, Undone' allowClear>
                     <Option value='all'>All</Option>
-                    <Option value='Done'>Done</Option>
-                    <Option value='Undone'>Undone</Option>
+                    <Option value='done'>Done</Option>
+                    <Option value='undone'>Undone</Option>
                 </Select>
             </Form.Item>
 

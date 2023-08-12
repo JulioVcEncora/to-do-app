@@ -1,11 +1,13 @@
 import React from 'react';
 import { Button, Form, Input, Select, DatePicker, Modal } from 'antd';
 import { DataType } from './';
+import { TodoType } from '..';
+import moment from 'moment';
 
 const { Option } = Select;
 
 type EditModalProps = {
-    handleSubmit: (values: any) => void;
+    handleSubmit: (values: TodoType) => void;
     open: boolean;
     closeModal: () => void;
     isLoading: boolean;
@@ -21,7 +23,7 @@ export const EditModal: React.FC<EditModalProps> = ({
     isLoading,
     initialValues,
 }) => {
-    const { name, priority, dueDate, state } = initialValues;
+    const { name, priority, dueDate } = initialValues;
     return (
         <Modal
             title='Create a new To Do'
@@ -30,7 +32,7 @@ export const EditModal: React.FC<EditModalProps> = ({
             footer={<></>}
         >
             <Form
-                name='wrap'
+                name='EditForm'
                 labelCol={{ flex: '110px' }}
                 labelAlign='left'
                 labelWrap
@@ -62,7 +64,7 @@ export const EditModal: React.FC<EditModalProps> = ({
                     </Select>
                 </Form.Item>
 
-                <Form.Item
+                {/* <Form.Item
                     className='item'
                     label='State'
                     name='state'
@@ -70,18 +72,19 @@ export const EditModal: React.FC<EditModalProps> = ({
                     rules={[{ required: true }]}
                 >
                     <Select placeholder='All, Done, Undone' allowClear>
-                        <Option value='Done'>Done</Option>
-                        <Option value='Undone'>Undone</Option>
+                        <Option value='done'>Done</Option>
+                        <Option value='undone'>Undone</Option>
                     </Select>
-                </Form.Item>
+                </Form.Item> */}
 
                 <Form.Item
                     className='item'
                     label='Due date'
                     name='dueDate'
                     rules={[{ required: false }]}
+                    initialValue={dueDate === '-' ? undefined : moment(dueDate)}
                 >
-                    <DatePicker placeholder={`${dueDate}`} />
+                    <DatePicker />
                 </Form.Item>
 
                 <Form.Item className='item' label=' '>

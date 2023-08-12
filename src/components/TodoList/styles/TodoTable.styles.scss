@@ -4,3 +4,18 @@
     }
 }
 
+.doneDate {
+    text-decoration: line-through;
+}
+
+.cta-button {
+    color: #1e90ff;
+
+    &:hover{
+        cursor: pointer;
+    }
+
+    &:active {
+        color: #177bdf;
+    }
+}

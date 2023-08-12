@@ -5,7 +5,14 @@ import './styles/TodoTable.styles.scss';
 import { EditModal } from './EditModal';
 import { DeleteModal } from './DeleteModal';
 import { useAppDispatch, useAppSelector } from '../../../app';
-import { fetchTodos, setAsDone, setAsUndone } from '../../features/todos';
+import {
+    fetchTodos,
+    setAsDone,
+    setAsUndone,
+    updateTodo,
+} from '../../features/todos';
+import moment from 'moment';
+import { TodoType } from '..';
 
 export type DataType = {
     key?: string;
@@ -20,8 +27,6 @@ const columns: ColumnsType<DataType> = [
     {
         title: 'Name',
         dataIndex: 'name',
-        sorter: (a, b) => a.name.length - b.name.length,
-        sortDirections: ['descend', 'ascend'],
     },
     {
         title: 'Priority',
@@ -43,6 +48,17 @@ const columns: ColumnsType<DataType> = [
     {
         title: 'Due Date',
         dataIndex: 'dueDate',
+        sorter: (a, b) => {
+            if (a.dueDate === '-' && b.dueDate === '-') {
+                return 0; // Both are "-", so they're equal
+            } else if (a.dueDate === '-') {
+                return 1; // "a" has "-", so "b" comes first
+            } else if (b.dueDate === '-') {
+                return -1; // "b" has "-", so "a" comes first
+            } else {
+                return +new Date(a.dueDate) - +new Date(b.dueDate);
+            }
+        },
         sortDirections: ['descend', 'ascend'],
     },
     {
@@ -52,13 +68,28 @@ const columns: ColumnsType<DataType> = [
 ];
 
 const CtaOptions: React.FC<
-    Omit<DataType, 'actions'> & { state: 'done' | 'undone' }
-> = ({ name, dueDate, priority, state, doneDate }) => {
+    Omit<DataType, 'actions'> & { state: 'done' | 'undone'; todoId: string }
+> = ({ todoId, name, dueDate, priority, state, doneDate }) => {
     const [editModalShow, setEditModalShow] = useState(false);
     const [deleteModalShow, setDeleteModalShow] = useState(false);
+    const dispatch = useAppDispatch();
+    const { loading } = useAppSelector((state) => state.todos);
+
+    const handleEditSubmit = (values: TodoType) => {
+        if (values.dueDate) {
+            // @ts-expect-error this is valid
+            const newDate = new Date(values.dueDate.format('YYYY-MM-DD'));
+            // @ts-expect-error this is valid
+            values.dueDate = newDate.getTime();
+        }
+        dispatch(updateTodo({ ...values, id: todoId, state }));
+        setEditModalShow(false);
+    };
+
     return (
         <div>
             <span
+                className='cta-button'
                 onClick={() => {
                     setEditModalShow(true);
                 }}
@@ -67,6 +98,7 @@ const CtaOptions: React.FC<
             </span>{' '}
             /{' '}
             <span
+                className='cta-button'
                 onClick={() => {
                     setDeleteModalShow(true);
                 }}
@@ -74,12 +106,12 @@ const CtaOptions: React.FC<
                 delete
             </span>
             <EditModal
-                handleSubmit={() => null}
+                handleSubmit={handleEditSubmit}
                 open={editModalShow}
                 closeModal={() => {
                     setEditModalShow(false);
                 }}
-                isLoading={false}
+                isLoading={loading}
                 initialValues={{
                     name,
                     priority,
@@ -111,23 +143,40 @@ export const TodoTable: React.FC = () => {
 
     useEffect(() => {
         dispatch(fetchTodos());
-    }, []);
+    }, [dispatch]);
 
     useEffect(() => {
         const formattedTodos: DataType[] = todos.map((todo) => {
             return {
                 ...todo,
                 name: todo.name ? todo.name : '-',
-                dueDate: todo.dueDate ? new Date(todo.dueDate) : '-',
-                doneDate: todo.doneDate ? new Date(todo.doneDate) : '-',
+                dueDate: todo.dueDate
+                    ? moment.utc(new Date(todo.dueDate)).format('YYYY-MM-DD')
+                    : '-',
+                doneDate: todo.doneDate
+                    ? moment.utc(new Date(todo.doneDate)).format('YYYY-MM-DD')
+                    : '-',
                 key: todo.id,
                 actions: (
                     <CtaOptions
                         name={todo.name ? todo.name : '-'}
                         priority={todo.priority}
-                        dueDate={todo.dueDate ? new Date(todo.dueDate) : '-'}
-                        doneDate={todo.doneDate ? new Date(todo.doneDate) : '-'}
+                        dueDate={
+                            todo.dueDate
+                                ? moment
+                                      .utc(new Date(todo.dueDate))
+                                      .format('YYYY-MM-DD')
+                                : '-'
+                        }
+                        doneDate={
+                            todo.doneDate
+                                ? moment
+                                      .utc(new Date(todo.doneDate))
+                                      .format('YYYY-MM-DD')
+                                : '-'
+                        }
                         state={todo.state}
+                        todoId={todo.id}
                         key={todo.id}
                     />
                 ),
@@ -143,7 +192,6 @@ export const TodoTable: React.FC = () => {
 
     const onSelectChange = (newSelectedRowKeys: React.Key[]) => {
         setSelectedRowKeys(newSelectedRowKeys);
-        console.log(newSelectedRowKeys);
 
         const done = newSelectedRowKeys.filter(
             (el) => !selectedRowKeys.includes(el),
@@ -174,16 +222,24 @@ export const TodoTable: React.FC = () => {
                 <Table
                     rowSelection={rowSelection}
                     columns={columns}
-                    dataSource={data}
+                    dataSource={[]}
                 />
             </div>
         );
     }
 
+    const assignRowsClassNames = (record: DataType) => {
+        if (record.doneDate !== '-') {
+            return 'doneDate';
+        }
+    };
+
     return (
         <div>
             <Table
                 rowSelection={rowSelection}
+                // @ts-expect-error it can be a callback function as well
+                rowClassName={assignRowsClassNames}
                 columns={columns}
                 dataSource={data}
                 loading={loading}

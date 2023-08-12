@@ -27,13 +27,17 @@ export const CreateTodoButton: React.FC = () => {
     };
 
     const handleSubmit = (values: TodoType) => {
+        let dueDate: TodoType['dueDate'];
+        if (values.dueDate) {
+            // @ts-expect-error this is valid
+            const newDate = new Date(values.dueDate.format('YYYY-MM-DD'));
+            // @ts-expect-error this is valid
+            dueDate = newDate.getTime();
+            console.log(dueDate);
+        }
         values = {
             ...values,
-            // @ts-expect-error this is valid
-            dueDate: new Date(
-                // @ts-expect-error this is valid
-                values.dueDate?.format('YYYY-MM-DD'),
-            ).getMilliseconds(),
+            dueDate,
         };
         dispatch(postNewTodo(values));
         setOpen(false);
