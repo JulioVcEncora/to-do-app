@@ -45,7 +45,7 @@ export const EditModal: React.FC<EditModalProps> = ({
                     label='Name'
                     name='name'
                     initialValue={name}
-                    rules={[{ required: true }]}
+                    rules={[{ required: false }]}
                 >
                     <Input />
                 </Form.Item>
@@ -55,7 +55,7 @@ export const EditModal: React.FC<EditModalProps> = ({
                     label='Priority'
                     name='priority'
                     initialValue={priority}
-                    rules={[{ required: true }]}
+                    rules={[{ required: false }]}
                 >
                     <Select placeholder='All, High, Medium, Low' allowClear>
                         <Option value='high'>High</Option>
@@ -63,19 +63,6 @@ export const EditModal: React.FC<EditModalProps> = ({
                         <Option value='low'>Low</Option>
                     </Select>
                 </Form.Item>
-
-                {/* <Form.Item
-                    className='item'
-                    label='State'
-                    name='state'
-                    initialValue={state}
-                    rules={[{ required: true }]}
-                >
-                    <Select placeholder='All, Done, Undone' allowClear>
-                        <Option value='done'>Done</Option>
-                        <Option value='undone'>Undone</Option>
-                    </Select>
-                </Form.Item> */}
 
                 <Form.Item
                     className='item'
