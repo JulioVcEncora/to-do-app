@@ -1,7 +1,7 @@
 import React from 'react';
 import { Button, Form, Input, Select, DatePicker } from 'antd';
 import { useAppDispatch } from '../../../app';
-import { filterTodos } from '../../features/todos';
+import { filterTodos, setFilters } from '../../features/todos';
 import './styles/SearchForm.styles.scss';
 import { TodoType } from '..';
 
@@ -9,7 +9,7 @@ const { Option } = Select;
 
 export const SearchForm: React.FC = () => {
     const dispatch = useAppDispatch();
-    const handleSubmit = (values: TodoType) => {
+    const handleSubmit = (values: TodoType & { page: number }) => {
         let dueDate: TodoType['dueDate'];
         if (values.dueDate) {
             // @ts-expect-error this is valid
@@ -20,9 +20,11 @@ export const SearchForm: React.FC = () => {
         values = {
             ...values,
             name: values.name ? values.name.toLowerCase() : undefined,
+            page: 0,
             dueDate,
         };
         dispatch(filterTodos(values));
+        dispatch(setFilters(values));
     };
 
     return (

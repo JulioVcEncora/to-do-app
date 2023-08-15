@@ -8,8 +8,10 @@ import { useAppDispatch, useAppSelector } from '../../../app';
 import {
     fetchMetrics,
     fetchTodos,
+    filterTodos,
     setAsDone,
     setAsUndone,
+    setCurrentPage,
     updateTodo,
 } from '../../features/todos';
 import moment from 'moment';
@@ -140,11 +142,17 @@ export const TodoTable: React.FC = () => {
     const [data, setData] = useState<DataType[] | []>([]);
     const dispatch = useAppDispatch();
 
-    const { loading, todos, error } = useAppSelector((state) => state.todos);
+    const { loading, todos, error, totalElements, currentPage, filtering } =
+        useAppSelector((state) => state.todos);
 
     useEffect(() => {
-        dispatch(fetchTodos());
-    }, [dispatch]);
+        if (!filtering) {
+            dispatch(fetchTodos(currentPage));
+        } else {
+            // @ts-expect-error this is expected
+            dispatch(filterTodos({ ...filtering, page: currentPage }));
+        }
+    }, [dispatch, currentPage]);
 
     useEffect(() => {
         const formattedTodos: DataType[] = todos.map((todo) => {
@@ -244,6 +252,17 @@ export const TodoTable: React.FC = () => {
                 rowClassName={assignRowsClassNames}
                 columns={columns}
                 dataSource={data}
+                pagination={{
+                    pageSize: 10,
+                    current: currentPage + 1,
+                    total: totalElements,
+                    onChange(page) {
+                        if (page - 1 !== currentPage) {
+                            dispatch(setCurrentPage(page - 1));
+                        }
+                    },
+                    showSizeChanger: false,
+                }}
                 loading={loading}
             />
             {error}

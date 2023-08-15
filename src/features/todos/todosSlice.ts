@@ -13,18 +13,31 @@ interface Todos {
 export interface TodosState {
     loading: boolean;
     todos: Todos[];
+    currentPage: number;
+    totalPages: number;
+    totalElements: number;
+    filtering?: Pick<Todos, 'name' | 'dueDate'> & {priority?: Todos['priority']; state?: Todos['state']};
     error?: string;
 }
 
 const initialState: TodosState = {
     loading: false,
     todos: [],
+    currentPage: 0,
+    totalPages: 0,
+    totalElements: 0,
+    filtering: undefined,
     error: undefined,
 };
 
-export const fetchTodos = createAsyncThunk('todos/fetchTodos', async () => {
-    const res = await api.get('/todos');
-    return res.data;
+export const fetchTodos = createAsyncThunk('todos/fetchTodos', async (page: number) => {
+    if(page !== undefined) {
+        const res = await api.get('/todos', {params: { page }});
+        return res.data;
+    } else {
+        const res = await api.get('/todos');
+        return res.data;
+    }
 });
 
 export const setAsDone = createAsyncThunk('todos/setAsDone', async (id: string) => {
@@ -42,7 +55,7 @@ export const postNewTodo = createAsyncThunk('todos/post', async (body: Omit<Todo
     return res.data;
 });
 
-export const filterTodos = createAsyncThunk('todos/filterTodos', async (body: Omit<Todos, 'id'>) => {
+export const filterTodos = createAsyncThunk('todos/filterTodos', async (body: Omit<Todos, 'id'> & {page: number}) => {
     const res = await api.get('/todos', {params: body});
     return res.data;
 });
@@ -67,12 +80,18 @@ const todosSlice = createSlice({
         });
         builder.addCase(fetchTodos.fulfilled, (state, action) => {
             state.loading = false;
-            state.todos = action.payload;
+            state.todos = action.payload.content;
+            state.currentPage = action.payload.number;
+            state.totalPages = action.payload.totalPages;
+            state.totalElements = action.payload.totalElements;
             state.error = '';
         });
         builder.addCase(fetchTodos.rejected, (state, action) => {
             state.loading = false;
             state.todos = [];
+            state.currentPage = 0;
+            state.totalElements = 0;
+            state.totalPages = 0;
             state.error = action.error.message;
         });
         // set a todo as done
@@ -119,7 +138,24 @@ const todosSlice = createSlice({
         });
         builder.addCase(postNewTodo.fulfilled, (state, action) => {
             state.loading = false;
-            state.todos.push(action.payload);
+            // change to last page on todo creation
+            if((state.totalElements + 1) / (10 * state.totalPages) > 1) {
+                // when already on last page and new todo creates a new page
+                // change to the next page
+                if(state.currentPage === state.totalPages - 1) {
+                    state.currentPage++;
+                } else {
+                    // else go to the last page
+                    state.currentPage = state.totalPages - 1;
+                }
+                state.totalElements++;
+                state.totalPages++;
+            } else if(state.currentPage !== state.totalPages - 1) {
+                state.currentPage = state.totalPages - 1;
+            } else {
+                state.todos.push(action.payload);
+            }
+            state.totalElements++;
             state.error = '';
         });
         builder.addCase(postNewTodo.rejected, (state, action) => {
@@ -132,7 +168,10 @@ const todosSlice = createSlice({
         });
         builder.addCase(filterTodos.fulfilled, (state, action) => {
             state.loading = false;
-            state.todos = action.payload;
+            state.todos = action.payload.content;
+            state.currentPage = action.payload.number;
+            state.totalPages = action.payload.totalPages;
+            state.totalElements = action.payload.totalElements;
             state.error = '';
         });
         builder.addCase(filterTodos.rejected, (state, action) => {
@@ -158,7 +197,16 @@ const todosSlice = createSlice({
             state.error = action.error.message;
         });
     },
-    reducers: {},
+    reducers: {
+        setCurrentPage: (state, action: {payload: number}) => {
+            state.currentPage = action.payload;
+        },
+        setFilters: (state, action: {payload: TodosState['filtering']}) => {
+            state.filtering = action.payload;
+        }
+    },
 });
+
+export const {setCurrentPage, setFilters} = todosSlice.actions;
 
 export const todosReducer = todosSlice.reducer;

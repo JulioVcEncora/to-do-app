@@ -43,7 +43,7 @@ export const CreateTodoModal: React.FC<CreateTodoModalProps> = ({
                     className='item'
                     label='Name'
                     name='name'
-                    rules={[{ required: false }]}
+                    rules={[{ required: true }]}
                 >
                     <Input />
                 </Form.Item>
