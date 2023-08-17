@@ -8,14 +8,20 @@
     text-decoration: line-through;
 }
 
-.cta-button {
-    color: #1e90ff;
+.red-row {
+    background-color: #E31837;
+}
 
-    &:hover{
-        cursor: pointer;
-    }
+.yellow-row {
+    background-color: #FFD700;
+}
 
-    &:active {
-        color: #177bdf;
-    }
+.green-row {
+    background-color: #1CAC78;
+}
+
+.cta-container {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
 }

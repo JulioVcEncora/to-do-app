@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Table } from 'antd';
+import { Table, Button } from 'antd';
 import { ColumnsType } from 'antd/es/table';
 import './styles/TodoTable.styles.scss';
 import { EditModal } from './EditModal';
@@ -23,6 +23,7 @@ import {
     SorterResult,
     TablePaginationConfig,
 } from 'antd/es/table/interface';
+import { ONE_WEEK_MILLIS } from '../../utils';
 
 export type DataType = {
     key?: string;
@@ -76,24 +77,28 @@ const CtaOptions: React.FC<
     };
 
     return (
-        <div>
-            <span
-                className='cta-button'
-                onClick={() => {
-                    setEditModalShow(true);
-                }}
-            >
-                edit
-            </span>{' '}
-            /{' '}
-            <span
-                className='cta-button'
-                onClick={() => {
-                    setDeleteModalShow(true);
-                }}
-            >
-                delete
-            </span>
+        <>
+            <div className='cta-container'>
+                <Button
+                    type='primary'
+                    className='cta-button'
+                    onClick={() => {
+                        setEditModalShow(true);
+                    }}
+                >
+                    edit
+                </Button>
+                <Button
+                    type='primary'
+                    danger
+                    className='cta-button'
+                    onClick={() => {
+                        setDeleteModalShow(true);
+                    }}
+                >
+                    delete
+                </Button>
+            </div>
             <EditModal
                 handleSubmit={handleEditSubmit}
                 open={editModalShow}
@@ -119,7 +124,7 @@ const CtaOptions: React.FC<
                     setDeleteModalShow(false);
                 }}
             />
-        </div>
+        </>
     );
 };
 
@@ -239,6 +244,25 @@ export const TodoTable: React.FC = () => {
     const assignRowsClassNames = (record: DataType) => {
         if (record.doneDate !== '-') {
             return 'doneDate';
+        }
+        if (record.dueDate !== '-') {
+            const dueDate = new Date(record.dueDate).getTime();
+            // handle cases for overdue tasks
+            if (Date.now() >= dueDate) {
+                return 'red-row';
+            }
+            // handle cases for close to due date tasks
+            if (
+                dueDate - Date.now() > ONE_WEEK_MILLIS &&
+                dueDate - Date.now() <= 2 * ONE_WEEK_MILLIS
+            ) {
+                return 'yellow-row';
+            }
+            // handle cases for not that close due date tasks
+            if (dueDate - Date.now() >= 3 * ONE_WEEK_MILLIS) {
+                return 'green-row';
+            }
+            return 'red-row';
         }
     };
 
