@@ -17,6 +17,7 @@ export interface TodosState {
     totalPages: number;
     totalElements: number;
     filtering?: Pick<Todos, 'name' | 'dueDate'> & {priority?: Todos['priority']; state?: Todos['state']};
+    sorting?: 'priority-desc' | 'priority-asc' | 'dueDate-desc' | 'dueDate-asc';
     error?: string;
 }
 
@@ -28,6 +29,7 @@ const initialState: TodosState = {
     totalElements: 0,
     filtering: undefined,
     error: undefined,
+    sorting: undefined,
 };
 
 export const fetchTodos = createAsyncThunk('todos/fetchTodos', async (page: number) => {
@@ -68,7 +70,12 @@ export const updateTodo = createAsyncThunk('todos/updateTodo', async (body: Todo
 export const fetchMetrics = createAsyncThunk('todos/metrics', async () => {
     const res = await api.get('/todos/metrics');
     return res.data;
-})
+});
+
+export const sortTodos = createAsyncThunk('todos/sortTodos', async (body: Omit<Todos, 'id'> & {page: number, sort: TodosState['sorting']}) => {
+    const res = await api.get('/todos', {params: body});
+    return res.data;
+});
 
 const todosSlice = createSlice({
     name: 'todo',
@@ -196,6 +203,22 @@ const todosSlice = createSlice({
             state.loading = false;
             state.error = action.error.message;
         });
+        // sort todos with criteria
+        builder.addCase(sortTodos.pending, (state) => {
+            state.loading = true;
+        });
+        builder.addCase(sortTodos.fulfilled, (state, action) => {
+            state.loading = false;
+            state.todos = action.payload.content;
+            state.currentPage = action.payload.number;
+            state.totalPages = action.payload.totalPages;
+            state.totalElements = action.payload.totalElements;
+            state.error = '';
+        });
+        builder.addCase(sortTodos.rejected, (state, action) => {
+            state.loading = false;
+            state.error = action.error.message;
+        });
     },
     reducers: {
         setCurrentPage: (state, action: {payload: number}) => {
@@ -203,10 +226,13 @@ const todosSlice = createSlice({
         },
         setFilters: (state, action: {payload: TodosState['filtering']}) => {
             state.filtering = action.payload;
+        },
+        setSorting: (state, action: {payload: TodosState['sorting']}) => {
+            state.sorting = action.payload;
         }
     },
 });
 
-export const {setCurrentPage, setFilters} = todosSlice.actions;
+export const {setCurrentPage, setFilters, setSorting} = todosSlice.actions;
 
 export const todosReducer = todosSlice.reducer;

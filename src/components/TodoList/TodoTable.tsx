@@ -12,10 +12,17 @@ import {
     setAsDone,
     setAsUndone,
     setCurrentPage,
+    setSorting,
+    sortTodos,
     updateTodo,
 } from '../../features/todos';
 import moment from 'moment';
 import { TodoType } from '..';
+import {
+    FilterValue,
+    SorterResult,
+    TablePaginationConfig,
+} from 'antd/es/table/interface';
 
 export type DataType = {
     key?: string;
@@ -34,34 +41,13 @@ const columns: ColumnsType<DataType> = [
     {
         title: 'Priority',
         dataIndex: 'priority',
-        sorter: (a, b) => {
-            const value = (val: 'high' | 'medium' | 'low'): number => {
-                return val === 'low' ? 1 : val === 'medium' ? 2 : 3;
-            };
-
-            const valA = value(a.priority);
-            const valB = value(b.priority);
-
-            if (valA === valB) return 0;
-
-            return valA < valB ? 1 : -1;
-        },
+        sorter: { multiple: 1 },
         sortDirections: ['descend', 'ascend'],
     },
     {
         title: 'Due Date',
         dataIndex: 'dueDate',
-        sorter: (a, b) => {
-            if (a.dueDate === '-' && b.dueDate === '-') {
-                return 0; // Both are "-", so they're equal
-            } else if (a.dueDate === '-') {
-                return 1; // "a" has "-", so "b" comes first
-            } else if (b.dueDate === '-') {
-                return -1; // "b" has "-", so "a" comes first
-            } else {
-                return +new Date(a.dueDate) - +new Date(b.dueDate);
-            }
-        },
+        sorter: { multiple: 2 },
         sortDirections: ['descend', 'ascend'],
     },
     {
@@ -142,17 +128,29 @@ export const TodoTable: React.FC = () => {
     const [data, setData] = useState<DataType[] | []>([]);
     const dispatch = useAppDispatch();
 
-    const { loading, todos, error, totalElements, currentPage, filtering } =
-        useAppSelector((state) => state.todos);
+    const {
+        loading,
+        todos,
+        error,
+        totalElements,
+        currentPage,
+        filtering,
+        sorting,
+    } = useAppSelector((state) => state.todos);
 
     useEffect(() => {
-        if (!filtering) {
+        if (sorting) {
+            dispatch(
+                // @ts-expect-error this is expected
+                sortTodos({ ...filtering, sort: sorting, page: currentPage }),
+            );
+        } else if (!filtering) {
             dispatch(fetchTodos(currentPage));
         } else {
             // @ts-expect-error this is expected
             dispatch(filterTodos({ ...filtering, page: currentPage }));
         }
-    }, [dispatch, currentPage]);
+    }, [dispatch, currentPage, sorting]);
 
     useEffect(() => {
         const formattedTodos: DataType[] = todos.map((todo) => {
@@ -197,6 +195,7 @@ export const TodoTable: React.FC = () => {
                 .filter((todo) => todo.state === 'done')
                 .map((todo) => todo.id),
         );
+        dispatch(fetchMetrics());
     }, [todos]);
 
     const onSelectChange = (newSelectedRowKeys: React.Key[]) => {
@@ -218,7 +217,6 @@ export const TodoTable: React.FC = () => {
                 dispatch(setAsUndone(`${el}`));
             });
         }
-        dispatch(fetchMetrics());
     };
 
     const rowSelection = {
@@ -244,6 +242,58 @@ export const TodoTable: React.FC = () => {
         }
     };
 
+    const handleTableChange = (
+        _pagination: TablePaginationConfig,
+        _filters: Record<string, FilterValue | null>,
+        sorter: SorterResult<DataType>,
+    ) => {
+        if (Array.isArray(sorter)) {
+            const sortField = sorter.reduce((prev, curr) => {
+                if (curr.field === 'priority' && curr.order === 'descend') {
+                    return prev.length > 1
+                        ? `${prev}-priority-desc`
+                        : 'priority-desc';
+                } else if (
+                    curr.field === 'priority' &&
+                    curr.order === 'ascend'
+                ) {
+                    return prev.length > 1
+                        ? `${prev}-priority-asc`
+                        : 'priority-asc';
+                } else if (
+                    curr.field === 'dueDate' &&
+                    curr.order === 'descend'
+                ) {
+                    return prev.length > 1
+                        ? `${prev}-dueDate-desc`
+                        : 'dueDate-desc';
+                } else if (
+                    curr.field === 'dueDate' &&
+                    curr.order === 'ascend'
+                ) {
+                    return prev.length > 1
+                        ? `${prev}-dueDate-asc`
+                        : 'dueDate-asc';
+                }
+            }, '');
+
+            dispatch(setSorting(sortField));
+        }
+        if (sorter.field === 'priority' && sorter.order === 'descend') {
+            dispatch(setSorting('priority-desc'));
+        } else if (sorter.field === 'priority' && sorter.order === 'ascend') {
+            dispatch(setSorting('priority-asc'));
+        } else if (sorter.field === 'dueDate' && sorter.order === 'descend') {
+            dispatch(setSorting('dueDate-desc'));
+        } else if (sorter.field === 'dueDate' && sorter.order === 'ascend') {
+            dispatch(setSorting('dueDate-asc'));
+        } else if (sorter.field === 'priority' && sorter.order === undefined) {
+            dispatch(setSorting(undefined));
+        } else if (sorter.field === 'dueDate' && sorter.order === undefined) {
+            dispatch(setSorting(undefined));
+        }
+    };
+
     return (
         <div>
             <Table
@@ -252,6 +302,8 @@ export const TodoTable: React.FC = () => {
                 rowClassName={assignRowsClassNames}
                 columns={columns}
                 dataSource={data}
+                // @ts-expect-error this is a correct and valid type
+                onChange={handleTableChange}
                 pagination={{
                     pageSize: 10,
                     current: currentPage + 1,
